@@ -2,7 +2,6 @@ package gcpinstancesinfo
 
 import (
 	_ "embed"
-	"log"
 	"strings"
 
 	"github.com/pkg/errors"

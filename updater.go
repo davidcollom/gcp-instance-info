@@ -3,7 +3,6 @@ package gcpinstancesinfo
 import (
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"time"
 )
