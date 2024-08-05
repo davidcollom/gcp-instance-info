@@ -85,13 +85,11 @@ func (df *DataFetcher) Updater(refreshDays int) error {
 	ticker := time.NewTicker(refreshInterval)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			err := df.UpdateData()
-			if err != nil {
-				log.Println("Error refreshing data:", err)
-			}
+	for range ticker.C {
+		err := df.UpdateData()
+		if err != nil {
+			log.Println("Error refreshing data:", err)
 		}
 	}
+	return nil
 }

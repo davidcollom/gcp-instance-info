@@ -51,15 +51,13 @@ func (m *MockDataFetcher) Updater(refreshDays int) error {
 	ticker := time.NewTicker(refreshInterval)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			err := m.UpdateData()
-			if err != nil {
-				return err
-			}
+	for range ticker.C {
+		err := m.UpdateData()
+		if err != nil {
+			return err
 		}
 	}
+	return nil
 }
 
 func TestUpdateData(t *testing.T) {
@@ -97,7 +95,8 @@ func TestUpdateData(t *testing.T) {
 					return
 				}
 				w.WriteHeader(tt.serverStatus)
-				io.WriteString(w, tt.serverResponse)
+				_, err := io.WriteString(w, tt.serverResponse)
+				require.NoError(t, err)
 			}))
 			defer server.Close()
 
