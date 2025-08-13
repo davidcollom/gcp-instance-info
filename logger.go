@@ -13,7 +13,7 @@ func init() {
 	log.Out = os.Stderr
 
 	// Set the log level
-	log.SetLevel(logrus.ErrorLevel)
+	// log.SetLevel(logrus.ErrorLevel)
 
 	// Set the log format
 	log.SetFormatter(&logrus.TextFormatter{

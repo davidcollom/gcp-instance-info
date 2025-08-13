@@ -12,7 +12,7 @@ import (
 func main() {
 	// Create the data directory if it does not exist
 	if err := os.MkdirAll("data", os.ModePerm); err != nil {
-		fmt.Printf("Failed to create data directory: %v\n", err)
+		fmt.Printf("Failed to create data directory: %v", err)
 		os.Exit(1)
 	}
 
@@ -20,14 +20,14 @@ func main() {
 
 	// Download the file
 	if err := updater.UpdateData(); err != nil {
-		fmt.Printf("Failed Get new Data: %v\n", err)
+		fmt.Printf("Failed Get new Data: %v", err)
 		os.Exit(1)
 	}
 
 	// Create the file
 	file, err := os.Create(gcpinstancesinfo.DataPath)
 	if err != nil {
-		fmt.Printf("Failed to create file: %v\n", err)
+		fmt.Printf("Failed to create file: %v", err)
 		os.Exit(1)
 	}
 	defer file.Close()
@@ -35,10 +35,10 @@ func main() {
 	// Write the response body to the file
 	_, err = file.Write(gcpinstancesinfo.GetData())
 	if err != nil {
-		fmt.Printf("Failed to write file: %v\n", err)
+		fmt.Printf("Failed to write file: %v", err)
 		os.Exit(1)
 	}
 
-	fmt.Printf("File downloaded and saved to %s\n", gcpinstancesinfo.DataPath)
+	fmt.Printf("File downloaded and saved to %s", gcpinstancesinfo.DataPath)
 
 }

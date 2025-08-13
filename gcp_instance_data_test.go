@@ -1,11 +1,16 @@
 package gcpinstancesinfo
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+const testRegion = "us-east1"
+
+var testMu = sync.Mutex{}
 
 // Mock data for testing
 var mockStaticData = `
@@ -77,9 +82,9 @@ func TestData(t *testing.T) {
 		},
 		{
 			name:             "BackupData",
-			dataBody:         []byte("invalid data"),
+			dataBody:         []byte{},
 			backupDataBody:   []byte(mockBackupData),
-			staticDataBody:   []byte(mockStaticData),
+			staticDataBody:   []byte{},
 			expectedInstance: "n1-standard-4",
 			expectedVCPU:     4,
 			expectedMemory:   15,
@@ -88,9 +93,9 @@ func TestData(t *testing.T) {
 		},
 		{
 			name:             "BackupDataFail",
-			dataBody:         []byte("invalid data"),
+			dataBody:         []byte{},
 			backupDataBody:   []byte("invalid backup data"),
-			staticDataBody:   []byte(mockStaticData),
+			staticDataBody:   []byte{},
 			expectedInstance: "",
 			expectedVCPU:     0,
 			expectedMemory:   0,
@@ -121,23 +126,30 @@ compute:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// t.Parallel()
+			testMu.Lock()
+
 			dataBody = tt.dataBody
 			backupDataBody = tt.backupDataBody
 			staticDataBody = tt.staticDataBody
 
 			pricing, err := Data()
+			testMu.Unlock()
+
 			if tt.expectError {
 				require.Error(t, err)
 				assert.Nil(t, pricing)
 			} else {
 				require.NoError(t, err)
 				require.NotNil(t, pricing)
+				// require.NotNil(t, pricing.Compute)
+				require.GreaterOrEqual(t, len(pricing.Compute.Instances), 1, "Expected at least one instance in pricing data: %+v", pricing)
 
 				instance, exists := pricing.Compute.Instances[tt.expectedInstance]
-				require.True(t, exists)
+				require.True(t, exists, "Instance %s should exist: %+v", tt.expectedInstance, pricing.Compute.Instances)
 				assert.Equal(t, tt.expectedVCPU, instance.VCPU)
 				assert.Equal(t, tt.expectedMemory, instance.Memory)
-				assert.Equal(t, tt.expectedHour, instance.Pricing["us-east1"].Hour)
+				assert.Equal(t, tt.expectedHour, instance.Pricing[testRegion].Hour)
 			}
 		})
 	}
