@@ -100,4 +100,4 @@ golangci-lint run
 
 ## License
 
-See the repository for licensing details.
+No licence file is included in this repository.
