@@ -1,10 +1,11 @@
 # `gcp-instance-info`
 
-GCP instance type information for Go, inspired by [`LeanerCloud/ec2-instances-info`](https://github.com/LeanerCloud/ec2-instances-info).
+GCP compute instance type and pricing information for Go, inspired by
+[`LeanerCloud/ec2-instances-info`](https://github.com/LeanerCloud/ec2-instances-info).
 
 The pricing and specification data for Google Cloud compute instances is embedded directly into your
-binary, so you can look up vCPU count, memory, GPU availability and regional pricing without making a
-network call or shipping a large data file alongside your application.
+binary, so you can look up vCPU count, memory, GPU availability and regional pricing without making
+a network call or shipping a large data file alongside your application.
 
 ## Features
 
@@ -14,7 +15,7 @@ network call or shipping a large data file alongside your application.
 
 ## Requirements
 
-- Go 1.21 or newer
+- Go 1.22 or newer
 
 ## Installation
 
@@ -24,20 +25,36 @@ go get github.com/davidcollom/gcp-instance-info
 
 ## Usage
 
+The entry point is `Data()`, which returns the parsed pricing data:
+
 ```go
 import (
     gcpinstancesinfo "github.com/davidcollom/gcp-instance-info"
 )
 
-instance, err := gcpinstancesinfo.GetInstance("n2-standard-4")
+pricing, err := gcpinstancesinfo.Data()
 if err != nil {
     return err
 }
 
+instance := pricing.Compute.Instances["n2-standard-4"]
 fmt.Println(instance.VCPU, instance.Memory, instance.Family)
 ```
 
-The embedded YAML is parsed on demand from `data/instances.yaml`.
+`Data()` returns a `GCPComputePricing` with four maps:
+
+| Field | Description |
+| ----- | ----------- |
+| `Compute.Instances` | Instance type name -> `Instance` (family, vCPU, memory, GPU counts, per-region pricing). |
+| `Compute.Storage` | Disk type -> `Storage` with monthly per-GB cost per region. |
+| `Compute.Licenses` | License name (e.g. `rhel`, `windows`) -> `License` with per-region cost. |
+| `Compute.Regions` | Region name -> `Region` (name and location). |
+
+Each `Instance` exposes `Family`, `VCPU`, `Memory`, `GPU`, the per-GPU-type counts (`A100`,
+`A10080GB`, `H10080GB`, `L4`) and a `Pricing` map of region -> `RegionPrices` (`Hour`, `HourSpot`,
+`Month`, `Month1Y`, `Month2Y`, `Month3Y`, `MonthSpot`).
+
+The embedded YAML lives in `data/instances.yaml` and is parsed on demand.
 
 ## Updating the data
 
@@ -50,16 +67,21 @@ Run the updater to refresh it:
 go run ./cmd
 ```
 
-This downloads the upstream `pricing.yml`, extracts the instance, storage and license pricing, and
-writes the result to `data/instances.yaml`.
+This downloads the upstream `pricing.yml` from `SourceURL`, converts it, and writes the result to
+`data/instances.yaml` (`DataPath`). The `//go:generate` directive on the embedded variable wires
+this up automatically:
 
-The refresh interval used by the updater is 7 days.
+```bash
+go generate ./...
+```
+
+The refresh interval used by the updater is 7 days (`defaultRefreshInterval`).
 
 ## Layout
 
 | Path | Description |
 | ---- | ----------- |
-| `gcp_instance_data.go` | Types and embedded data accessors. |
+| `gcp_instance_data.go` | Types, the embedded dataset and the `Data()` accessor. |
 | `updater.go` | Downloads and transforms the upstream pricing data. |
 | `logger.go` | Logging helper used by the updater. |
 | `cmd/main.go` | Command that refreshes `data/instances.yaml`. |
