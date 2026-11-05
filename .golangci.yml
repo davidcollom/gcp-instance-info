@@ -1,0 +1,18 @@
+# golangci-lint v2 configuration.
+#
+# This module was written against golangci-lint v1 defaults, where the
+# standard-library error-handling exclusions (EXC0001) were applied out of
+# the box. golangci-lint v2 moved those exclusions behind opt-in presets, so
+# upgrading the linter on its own starts failing the build on unchecked
+# (*os.File).Close and io.ReadCloser.Close calls that v1 never reported.
+#
+# Enabling the presets restores the v1 behaviour exactly.
+version: "2"
+
+linters:
+  exclusions:
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
